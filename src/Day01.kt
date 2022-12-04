@@ -1,12 +1,11 @@
 import java.util.PriorityQueue
 
-private data class Elf(val calorieList: MutableList<Int> = mutableListOf()) {
-    fun totalCalories() : Int {
-        return calorieList.sumOf { it }
-    }
-}
-
 fun main() {
+    data class Elf(val calorieList: MutableList<Int> = mutableListOf()) {
+        fun totalCalories() : Int {
+            return calorieList.sumOf { it }
+        }
+    }
 
     fun createElfList(input : List<String>) : MutableList<Elf> {
         val elves = mutableListOf<Elf>()

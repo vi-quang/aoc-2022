@@ -1,103 +1,23 @@
 import java.lang.IllegalStateException
 
-/**
- * HandShapeNode -------------------------------------------------------------------
- */
-private class HandShapeNode(val shape: HandShape) {
-    var next: HandShapeNode = this
-        set(value) {
-            field = value
-            field._prev = this
-        }
-
-    private var _prev = this
-
-    val prev: HandShapeNode
-        get() {
-            return _prev
-        }
-}
-
-private fun HandShapeNode.rotateForwardTo(shape: HandShape) : HandShapeNode {
-    var currentNode = this
-
-    while (currentNode.shape != shape) {
-        currentNode = currentNode.next
-    }
-
-    return currentNode
-}
-
-private fun HandShapeNode.rotateBackwardTo(shape: HandShape) : HandShapeNode {
-    var currentNode = this
-
-    while (currentNode.shape != shape) {
-        currentNode = currentNode.prev
-    }
-
-    return currentNode
-}
-
-private fun HandShapeNode.score() : Int {
-    return this.shape.score
-}
-
-private fun HandShapeNode.getNodeForOutcome(outcome : Outcome) : HandShapeNode {
-    return when (outcome) {
-        Outcome.Lose -> {
-            this.prev
-        }
-
-        Outcome.Draw -> {
-            this
-        }
-
-        Outcome.Win -> {
-            this.next
-        }
-    }
-}
-
-
-private fun HandShapeNode.outcome(opponentHand: HandShape) : Outcome {
-    if (this.shape == opponentHand) {
-        return Outcome.Draw
-    } else if (this.next.shape == opponentHand) {
-        return Outcome.Win
-    } else {
-        return Outcome.Lose
-    }
-}
-
 
 /**
  * HandShape -------------------------------------------------------------------
  */
-private enum class HandShape (val score: Int) {
+enum class HandShape(val score: Int) {
     Rock(1),
     Paper(2),
     Scissors(3)
 }
 
 
-
 /**
  * Outcome -------------------------------------------------------------------
  */
-private enum class Outcome(val score: Int) {
+enum class Outcome(val score: Int) {
     Lose(0),
     Draw(3),
     Win(6)
-}
-
-
-private fun Char.toOutcome() : Outcome {
-    return when (this) {
-        'X' -> Outcome.Lose
-        'Y' -> Outcome.Draw
-        'Z' -> Outcome.Win
-        else -> throw IllegalStateException()
-    }
 }
 
 
@@ -105,6 +25,85 @@ private fun Char.toOutcome() : Outcome {
  * Main -------------------------------------------------------------------
  */
 fun main() {
+
+    /**
+     * HandShapeNode -------------------------------------------------------------------
+     */
+    class HandShapeNode(val shape: HandShape) {
+        var next: HandShapeNode = this
+            set(value) {
+                field = value
+                field._prev = this
+            }
+
+        private var _prev = this
+
+        val prev: HandShapeNode
+            get() {
+                return _prev
+            }
+    }
+
+    fun HandShapeNode.rotateForwardTo(shape: HandShape): HandShapeNode {
+        var currentNode = this
+
+        while (currentNode.shape != shape) {
+            currentNode = currentNode.next
+        }
+
+        return currentNode
+    }
+
+    fun HandShapeNode.rotateBackwardTo(shape: HandShape): HandShapeNode {
+        var currentNode = this
+
+        while (currentNode.shape != shape) {
+            currentNode = currentNode.prev
+        }
+
+        return currentNode
+    }
+
+    fun HandShapeNode.score(): Int {
+        return this.shape.score
+    }
+
+    fun HandShapeNode.getNodeForOutcome(outcome: Outcome): HandShapeNode {
+        return when (outcome) {
+            Outcome.Lose -> {
+                this.prev
+            }
+
+            Outcome.Draw -> {
+                this
+            }
+
+            Outcome.Win -> {
+                this.next
+            }
+        }
+    }
+
+    fun HandShapeNode.outcome(opponentHand: HandShape): Outcome {
+        if (this.shape == opponentHand) {
+            return Outcome.Draw
+        } else if (this.next.shape == opponentHand) {
+            return Outcome.Win
+        } else {
+            return Outcome.Lose
+        }
+    }
+
+
+    fun Char.toOutcome(): Outcome {
+        return when (this) {
+            'X' -> Outcome.Lose
+            'Y' -> Outcome.Draw
+            'Z' -> Outcome.Win
+            else -> throw IllegalStateException()
+        }
+    }
+
 
     fun createRing(): HandShapeNode {
         val nodeRock = HandShapeNode(HandShape.Rock)
@@ -117,7 +116,7 @@ fun main() {
         return nodeRock
     }
 
-    fun createMap(rock: Char, paper: Char, scissors: Char) : Map<Char, HandShape> {
+    fun createMap(rock: Char, paper: Char, scissors: Char): Map<Char, HandShape> {
         return mapOf(rock to HandShape.Rock, paper to HandShape.Paper, scissors to HandShape.Scissors)
     }
 
