@@ -1,7 +1,7 @@
 /**
  * Rucksack -------------------------------------------------------------------
  */
-private data class Rucksack(val compartments: ArrayList<Compartment> = ArrayList()) {
+private data class Rucksack(val compartments: MutableList<Compartment> = mutableListOf()) {
     init {
         compartments.add(Compartment())
         compartments.add(Compartment())

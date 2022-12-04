@@ -76,7 +76,7 @@ private fun HandShapeNode.outcome(opponentHand: HandShape) : Outcome {
 private enum class HandShape (val score: Int) {
     Rock(1),
     Paper(2),
-    Scissors(3);
+    Scissors(3)
 }
 
 
@@ -87,7 +87,7 @@ private enum class HandShape (val score: Int) {
 private enum class Outcome(val score: Int) {
     Lose(0),
     Draw(3),
-    Win(6);
+    Win(6)
 }
 
 
