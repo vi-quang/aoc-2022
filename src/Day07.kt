@@ -69,7 +69,7 @@ fun main() {
         }
     }
 
-    class ParsingEngine() {
+    class CommandParser() {
 
         val allDirectory = mutableSetOf<Directory>()
         var state = State.Initial
@@ -79,85 +79,105 @@ fun main() {
 
         fun process(line: String): Int {
             allDirectory.add(activeDirectory) //inefficient, we don't care about non-actives because size=0
+
             when (state) {
                 State.Initial -> {
                     //no verification check
-                    val (command, parameter) = parseCommand(line)
-                    when (command) {
-                        Command.ChangeDirectory -> {
-                            when (parameter) {
-                                "/" -> {
-                                    activeDirectory = root
-                                }
-
-                                ".." -> {
-                                    val parentDirectory = activeDirectory.parentDirectory
-                                    if (parentDirectory == null) {
-                                        activeDirectory = root
-                                    } else {
-                                        activeDirectory = parentDirectory
-                                    }
-                                }
-
-                                else -> {
-                                    var directory = activeDirectory.getDirectory(parameter)
-                                    if (directory == null) {
-                                        directory = Directory(parameter)
-                                    }
-                                    activeDirectory = directory
-                                }
-                            }
-                        }
-
-                        Command.List -> {
-                            state = State.IsInListCommand
-                        }
-                    }
-
+                    processCommand(line)
                 }
 
                 State.IsInListCommand -> {
                     if (line.startsWith("$")) {
                         state = State.Initial
                         return 0
-                    } else {
-                        val token = line.split(" ")
-                        when (token[0]) {
-                            "dir" -> { //assume there's only one dir per directory
-                                val directory = Directory(token[1])
-                                activeDirectory.add(directory)
-                            }
-
-                            else -> {
-                                val file = File(token[1], token[0].toInt())
-                                activeDirectory.add(file)
-                            }
-                        }
                     }
-                }
 
+                    processListCommand(line)
+                }
             }
 
             return 1
         }
 
 
+        private fun processCommand(line: String) {
+            val (command, parameter) = parseCommand(line)
+            when (command) {
+                Command.ChangeDirectory -> {
+                    processChangeDirectoryCommand(parameter)
+                }
+
+                Command.List -> {
+                    state = State.IsInListCommand
+                }
+            }
+        }
+
+        private fun processChangeDirectoryCommand(parameter: String) {
+            when (parameter) {
+                "/" -> {
+                    activeDirectory = root
+                }
+
+                ".." -> {
+                    val parentDirectory = activeDirectory.parentDirectory
+                    if (parentDirectory == null) {
+                        activeDirectory = root
+                    } else {
+                        activeDirectory = parentDirectory
+                    }
+                }
+
+                else -> {
+                    var directory = activeDirectory.getDirectory(parameter)
+                    if (directory == null) {
+                        directory = Directory(parameter)
+                    }
+                    activeDirectory = directory
+                }
+            }
+        }
+
+        private fun processListCommand(line: String) {
+            val token = line.split(" ")
+            when (token[0]) {
+                "dir" -> { //assume there's only one dir per directory
+                    val directory = Directory(token[1])
+                    activeDirectory.add(directory)
+                }
+
+                else -> {
+                    val file = File(token[1], token[0].toInt())
+                    activeDirectory.add(file)
+                }
+            }
+        }
+
     }
 
+    class ParserEngine {
+
+        var commandParser = CommandParser()
+
+        fun process(input: List<String>) {
+            var i = 0
+            while (i < input.size) {
+                val line = input[i]
+                i += commandParser.process(line)
+            }
+        }
+
+
+    }
 
     fun part1(input: List<String>): Int {
 
-        val engine = ParsingEngine()
-
-        var i = 0
-        while (i < input.size) {
-            val line = input[i]
-            i += engine.process(line)
-        }
+        val engine = ParserEngine()
+        engine.process(input)
 
         val overList = mutableListOf<Directory>()
 
-        for (directory in engine.allDirectory) {
+        for (directory in engine.commandParser.allDirectory) {
             if (directory.getSize() <= 100000) {
                 overList.add(directory)
                 System.err.println("N: ${directory.name} ${directory.getSize()}")
@@ -169,22 +189,16 @@ fun main() {
 
     fun part2(input: List<String>): Int {
 
-        val engine = ParsingEngine()
-
-        var i = 0
-        while (i < input.size) {
-            val line = input[i]
-            i += engine.process(line)
-        }
-
+        val engine = ParserEngine()
+        engine.process(input)
 
         val totalCapacity = 70000000
-        val unusedSpace = totalCapacity - engine.root.getSize()
+        val unusedSpace = totalCapacity - engine.commandParser.root.getSize()
 
         val filterList = mutableListOf<Directory>()
-        var smallest: Directory = engine.root
+        var smallest: Directory = engine.commandParser.root
 
-        for (directory in engine.allDirectory) {
+        for (directory in engine.commandParser.allDirectory) {
             val difference = directory.getSize() + unusedSpace
 
             if (difference >= 30000000) {
