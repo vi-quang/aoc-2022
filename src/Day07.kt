@@ -15,7 +15,6 @@ private enum class Command {
 
 fun main() {
 
-
     fun parseCommand(line: String): Pair<Command, String> {
         val token = line.split(" ")
         val command = token[1]
@@ -71,6 +70,7 @@ fun main() {
 
     class CommandParser() {
 
+
         val allDirectory = mutableSetOf<Directory>()
         var state = State.Initial
 
@@ -78,7 +78,6 @@ fun main() {
         var activeDirectory = root
 
         fun process(line: String): Int {
-            allDirectory.add(activeDirectory) //inefficient, we don't care about non-actives because size=0
 
             when (state) {
                 State.Initial -> {
@@ -131,7 +130,7 @@ fun main() {
                 else -> {
                     var directory = activeDirectory.getDirectory(parameter)
                     if (directory == null) {
-                        directory = Directory(parameter)
+                        directory = createDirectory(activeDirectory, parameter)
                     }
                     activeDirectory = directory
                 }
@@ -142,17 +141,26 @@ fun main() {
             val token = line.split(" ")
             when (token[0]) {
                 "dir" -> { //assume there's only one dir per directory
-                    val directory = Directory(token[1])
-                    activeDirectory.add(directory)
+                    createDirectory(activeDirectory, token[1])
                 }
 
                 else -> {
-                    val file = File(token[1], token[0].toInt())
-                    activeDirectory.add(file)
+                    createFile(activeDirectory, token[1], token[0].toInt())
                 }
             }
         }
 
+        private fun createFile(parent: Directory, name : String, size: Int) {
+            val file = File(name, size)
+            parent.add(file)
+        }
+
+        private fun createDirectory(parent: Directory, name: String) : Directory {
+            val directory = Directory(name)
+            parent.add(directory)
+            allDirectory.add(directory)
+            return directory
+        }
     }
 
     class ParserEngine {
