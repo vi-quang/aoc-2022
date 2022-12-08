@@ -75,7 +75,12 @@ fun main() {
         var state = State.Initial
 
         val root = Directory("/")
+
         var activeDirectory = root
+
+        init {
+            allDirectory.add(root)
+        }
 
         fun process(line: String): Int {
 
