@@ -1,3 +1,4 @@
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.properties.Delegates
 
@@ -104,27 +105,45 @@ class Tree(val treeHeight: Int) : Completable() {
         probe.seenTreeList.add(this)
     }
 
+
+    private val timer: Timer by lazy {
+        val timer = Timer()
+        timer.scheduleAtFixedRate(
+            object : TimerTask() {
+                override fun run() {
+                    transfer()
+                }
+            },
+            0, 1000
+        ) // 1000 Millisecond  = 1 second
+
+        timer
+    }
+
+    fun startTimer() {
+        timer
+    }
+
+
     fun transfer() {
-        for (i in 0 until 4) {
-            if (queue.size > 0) {
-                val tracer = queue.remove()
+        if (queue.size > 0) {
+            val tracer = queue.remove()
 
-                when (tracer.direction) {
-                    Direction.North -> {
-                        transferWithCheck(tracer, north)
-                    }
+            when (tracer.direction) {
+                Direction.North -> {
+                    transferWithCheck(tracer, north)
+                }
 
-                    Direction.South -> {
-                        transferWithCheck(tracer, south)
-                    }
+                Direction.South -> {
+                    transferWithCheck(tracer, south)
+                }
 
-                    Direction.East -> {
-                        transferWithCheck(tracer, east)
-                    }
+                Direction.East -> {
+                    transferWithCheck(tracer, east)
+                }
 
-                    Direction.West -> {
-                        transferWithCheck(tracer, west)
-                    }
+                Direction.West -> {
+                    transferWithCheck(tracer, west)
                 }
             }
         }
@@ -179,6 +198,9 @@ fun main() {
         }
 
         fun start() {
+//            grid.forAllCell {
+//                it.startTimer()
+//            }
             while (totalCount > reportedList.size) {
                 transfer()
             }
