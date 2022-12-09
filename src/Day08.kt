@@ -16,7 +16,7 @@ import kotlin.properties.Delegates
  *
  * The TreeTracker stops when it's heard from all the Trees.
  *
- * For Part 2: As each Probes pass through each Tree it tracks the Trees it has made contact with.
+ * For Part 2: As each Probe pass through each Tree it tracks the Trees it has made contact with.
  */
 enum class Direction {
     North, South, East, West
@@ -39,13 +39,11 @@ open class Completable() {
     }
 }
 
-class Probe(val heightValue: Int, val direction: Direction) : Completable() {
-    val seenTreeList = mutableListOf<Tree>()
+class Probe(
+    val heightValue: Int, val direction: Direction,
+    val seenTreeList: MutableList<Tree> = mutableListOf()
+) : Completable()
 
-    fun getTreePoint() : Int {
-        return seenTreeList.sumOf { it.treeHeight }
-    }
-}
 
 class Tree(val treeHeight: Int) : Completable() {
     var north: Tree? = null
@@ -65,22 +63,7 @@ class Tree(val treeHeight: Int) : Completable() {
         list.add(Probe(treeHeight, Direction.West))
 
         list.forEach {
-            it.observers.add { source, state ->
-                run {
-                    returnCount += 1
-                    if (state == CompletionState.Success) {
-                        hasSuccess = true
-                    }
-
-                    if (returnCount >= 4) {
-                        if (hasSuccess) {
-                            this.completionState = CompletionState.Success
-                        } else {
-                            this.completionState = CompletionState.Fail
-                        }
-                    }
-                }
-            }
+            it.observers.add { _, state -> processOnStateChanged(state) }
         }
 
         list
@@ -90,7 +73,20 @@ class Tree(val treeHeight: Int) : Completable() {
         probeList.forEach { queue.add(it) }
     }
 
-    fun getTotalPoint() : Int {
+
+    private fun processOnStateChanged(state: CompletionState) {
+        returnCount += 1
+        if (state == CompletionState.Success) {
+            hasSuccess = true
+        }
+
+        if (returnCount >= 4) {
+            this.completionState = if (hasSuccess) CompletionState.Success else CompletionState.Fail
+        }
+    }
+
+
+    fun getTotalPoint(): Int {
         var product = 1
         probeList.forEach {
             product *= it.seenTreeList.size
@@ -158,32 +154,28 @@ fun main() {
 
 
         init {
-
             grid.forAllCell {
-                it.observers.add { source, state ->
-                    run {
-                        when (state) {
-                            Completable.CompletionState.Success -> {
-                                visibleTreeList.add(source as Tree)
-                                reportedList.add(source)
-                            }
-
-                            Completable.CompletionState.Fail -> {
-                                reportedList.add(source as Tree)
-                            }
-
-                            Completable.CompletionState.Uncompleted -> {
-
-                            }
-                        }
-
-                        //System.err.println("UPDATE------------------ ${reportedList.size}/$totalCount VIS: ${visibleTreeList.size}")
-
-                    }
-                }
+                it.observers.add { source, state -> processCompletionStateChange(source, state) }
             }
 
             totalCount = grid.rowCount() * grid.columnCount()
+        }
+
+        private fun processCompletionStateChange(source: Any, state: Completable.CompletionState) {
+            when (state) {
+                Completable.CompletionState.Success -> {
+                    visibleTreeList.add(source as Tree)
+                    reportedList.add(source)
+                }
+
+                Completable.CompletionState.Fail -> {
+                    reportedList.add(source as Tree)
+                }
+
+                Completable.CompletionState.Uncompleted -> {
+
+                }
+            }
         }
 
         fun start() {
@@ -199,7 +191,7 @@ fun main() {
         }
     }
 
-    fun part1(input: List<String>): Int {
+    fun createGrid(input: List<String>): Grid<Tree> {
         val grid = Grid(input) { Tree(it.digitToInt()) }
 
         grid.linkLeft { a, b -> b.east = a }
@@ -207,51 +199,22 @@ fun main() {
         grid.linkTop { a, b -> b.south = a }
         grid.linkBottom { a, b -> b.north = a }
 
-        for (r in 0 until grid.rowCount()) {
-            for (c in 0 until grid.columnCount()) {
-                System.err.print(" ${grid.get(r, c).treeHeight}")
-            }
-            System.err.println("")
-        }
+        return grid
+    }
 
-        val cell = grid.get(1, 1)
-        System.err.println(">>>> ${cell.treeHeight}")
-        System.err.println(cell.west!!.treeHeight)
-        System.err.println(cell.east!!.treeHeight)
-        System.err.println(cell.north!!.treeHeight)
-        System.err.println(cell.south!!.treeHeight)
-
+    fun part1(input: List<String>): Int {
+        val grid = createGrid(input)
         val tracker = TreeTracker(grid)
+
         tracker.start()
 
         return tracker.visibleTreeList.size
     }
 
     fun part2(input: List<String>): Int {
-        val grid = Grid(input) { Tree(it.digitToInt()) }
-
-        grid.linkLeft { a, b -> b.east = a }
-        grid.linkRight { a, b -> b.west = a }
-        grid.linkTop { a, b -> b.south = a }
-        grid.linkBottom { a, b -> b.north = a }
-
-        for (r in 0 until grid.rowCount()) {
-            for (c in 0 until grid.columnCount()) {
-                System.err.print(" ${grid.get(r, c).treeHeight}")
-            }
-            System.err.println("")
-        }
-
-        val cell = grid.get(1, 1)
-        System.err.println(">>>> ${cell.treeHeight}")
-        System.err.println(cell.west!!.treeHeight)
-        System.err.println(cell.east!!.treeHeight)
-        System.err.println(cell.north!!.treeHeight)
-        System.err.println(cell.south!!.treeHeight)
-
+        val grid = createGrid(input)
         val tracker = TreeTracker(grid)
         tracker.start()
-
 
         var max = 0
         grid.forAllCell {
