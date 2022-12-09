@@ -5,8 +5,11 @@ import kotlin.math.abs
  */
 fun main() {
 
+    fun Int.toIdentity(): Int {
+        if (this == 0) {
+            return 0
+        }
 
-    fun Int.toIdentity() : Int {
         if (this < 1) {
             return -1
         } else {
@@ -14,13 +17,10 @@ fun main() {
         }
     }
 
-    fun part1(input: List<String>): Int {
-        val tailPositionList = mutableSetOf<Pair<Int, Int>>()
-        var headC = 0
+    fun getHeadPositions(input: List<String>): List<Pair<Int, Int>> {
+        val positionList = mutableListOf<Pair<Int, Int>>()
         var headR = 0
-        var tailC = 0
-        var tailR = 0
-
+        var headC = 0
 
         input.forEach {
             val token = it.split(" ")
@@ -48,48 +48,60 @@ fun main() {
                         headR--
                     }
                 }
-
-                val diffC = headC - tailC
-                val diffR = headR - tailR
-                val deltaC = abs(diffC)
-                val deltaR = abs(diffR)
-
-
-                if (deltaC == 2 || deltaR == 2) {
-                    if (headR == tailR) { //same row
-                        tailC += diffC.toIdentity()
-                    } else if (headC == tailC) {
-                        tailR += diffR.toIdentity()
-                    } else {
-                        if (deltaC == 2) {
-                            tailC += diffC.toIdentity()
-                            tailR = headR
-                        }
-
-                        if (deltaR == 2) {
-                            tailR += diffR.toIdentity()
-                            tailC = headC
-                        }
-                    }
-                }
-
-
-                System.err.println("H:$headR, $headC --- T:$tailR, $tailC")
-
-                tailPositionList.add(Pair(tailR, tailC))
-
+                positionList.add(Pair(headR, headC))
             }
+        }
+
+        return positionList
+    }
+
+    fun getTailPositions(headPositions: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
+        val tailPositions = mutableListOf<Pair<Int, Int>>()
+
+        var tailR = 0
+        var tailC = 0
+
+        headPositions.forEach {
+
+            val headR = it.first
+            val headC = it.second
+
+            val diffC = headC - tailC
+            val diffR = headR - tailR
+            val deltaC = abs(diffC)
+            val deltaR = abs(diffR)
+
+            if (deltaC == 2 || deltaR == 2) {
+                tailC += diffC.toIdentity()
+                tailR += diffR.toIdentity()
+            }
+
+            //System.err.println("H:$headR, $headC --- T:$tailR, $tailC")
+
+            tailPositions.add(Pair(tailR, tailC))
 
         }
 
+        return tailPositions
+    }
 
-        return tailPositionList.size
+    fun part1(input: List<String>): Int {
+        val headPositions = getHeadPositions(input)
+        val tailPositions = getTailPositions(headPositions)
+
+        return tailPositions.toSet().size
     }
 
     fun part2(input: List<String>): Int {
-        var total = 0
+        val headPositions = getHeadPositions(input)
+        var tailPositions = getTailPositions(headPositions) //tail 1
 
-        return total
+        for (i in 2 .. 9) { //tails 2 .. 9
+            System.err.println("$i")
+            tailPositions = getTailPositions(tailPositions)
+        }
+
+        return tailPositions.toSet().size
     }
 
 
