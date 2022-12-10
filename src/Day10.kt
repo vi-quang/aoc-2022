@@ -10,9 +10,9 @@ fun main() {
         return input.stream().map { it.replace("addx ", "noop noop,noop") }
             .asSequence()
             .flatMap(Regex(" ")::splitToSequence)
-            .mapIndexed { index, it ->
+            .mapIndexed { index, line ->
                 val cycle = index + 1
-                it.replace(",noop", " $cycle|")
+                line.replace(",noop", " $cycle|")
                     .replace("noop", "$cycle|0")
             }
             .flatMap(Regex(" ")::splitToSequence)
@@ -21,8 +21,8 @@ fun main() {
                 val cycle = token[0].toInt()
                 cycle to token[1].toInt()
             }
-            .scan(Pair(0, 1)) { acc, it ->
-                it.first to (acc.second + it.second)
+            .scan(Pair(0, 1)) { acc, pair ->
+                pair.first to (acc.second + pair.second)
             }
             .groupBy { it.first }
     }
